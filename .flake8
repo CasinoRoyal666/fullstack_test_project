@@ -1,0 +1,8 @@
+[flake8]
+max-line-length = 120
+extend-ignore = E203, W503
+per-file-ignores =
+    # F401, F403, F405 are disabled for settings files due to wildcard imports
+    backend/config/settings/__init__.py: F401,F403,F405
+    backend/config/settings/development.py: F401,F403,F405
+    backend/config/settings/production.py: F401,F403,F405

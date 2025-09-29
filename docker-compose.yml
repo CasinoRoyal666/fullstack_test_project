@@ -1,0 +1,149 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    profiles: ["dev", "prod"]
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      MODE: ${MODE}
+      DJANGO_ENVIRONMENT: ${DJANGO_ENVIRONMENT}
+      DEBUG: ${DEBUG}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: ${DB_HOST}
+      SECRET_KEY: ${SECRET_KEY}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles: ["dev", "prod"]
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    environment:
+      API_URL: ${API_URL}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+    profiles: ["dev"]
+
+  frontend-prod:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+      args:
+        NEXT_PUBLIC_API_URL: /api/
+    environment:
+      NEXT_PUBLIC_API_URL: /api/
+    depends_on:
+      - backend
+    profiles: ["prod"]
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx-dev.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - backend
+      - frontend
+    profiles: ["dev"]
+
+  nginx-prod:
+    image: nginx:1.27-alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx-prod.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - backend
+      - frontend-prod
+    profiles: ["prod"]
+
+  backend-codecheck:
+    build: ./backend
+    command: sh -c "black --check . && isort --check-only . && flake8 ."
+    volumes:
+      - ./backend:/app
+    profiles: ["lint"]
+
+  backend-codefix:
+    build: ./backend
+    command: sh -c "black . && isort ."
+    volumes:
+      - ./backend:/app
+    profiles: ["fix"]
+
+  frontend-codecheck:
+    build: ./frontend
+    command: sh -c "npm run lint"
+    volumes:
+      - ./frontend:/app
+    profiles: ["lint"]
+
+  frontend-codefix:
+    build: ./frontend
+    command: sh -c "npm run lint:fix && npm run format"
+    volumes:
+      - ./frontend:/app
+    profiles: ["fix"]
+
+  backend-test:
+    build: ./backend
+    environment:
+      MODE: test
+      DJANGO_ENVIRONMENT: test
+      DEBUG: False
+      DB_NAME: test_db
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: db
+      SECRET_KEY: test-secret-key
+    command: python manage.py test --parallel
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles: ["test"]
+
+  frontend-test:
+    build: ./frontend
+    command: npm test
+    volumes:
+      - ./frontend:/app
+    profiles: ["test"]
+
+volumes:
+  postgres_data:
+  frontend_build:
