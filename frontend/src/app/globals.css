@@ -1,3 +1,7 @@
+@taiwind base;
+@taiwind components;
+@taiwind utilities;
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
