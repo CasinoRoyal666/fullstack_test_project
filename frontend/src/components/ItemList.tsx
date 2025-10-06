@@ -1,39 +1,36 @@
-'use client';
-
-import { useState, useEffect } from 'react';
 import { getItems } from '@/app/lib/api';
 import { Item } from '@/types';
 import Link from 'next/link';
 
-export default function ItemList() {
-  const [items, setItems] = useState<Item[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export default async function ItemList() {
+  let items: Item[] = [];
+  let error: string | null = null;
 
-  useEffect(() => {
-    const fetchItems = async () => {
-      try {
-        const data = await getItems();
-        setItems(data);
-      } catch (err) {
-        setError('Error fetching items');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchItems();
-  }, []);
+  try {
+    items = await getItems();
+  } catch (err) {
+    error = 'Error fetching items';
+  }
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>{error}</p>;
+  if (error) return <p className="text-red-500">{error}</p>;
+
+  if (items.length === 0) {
+    return <p className="text-gray-500">No items yet. Create one above!</p>;
+  }
 
   return (
-    <ul className="list-disc">
+    <ul className="space-y-3">
       {items.map((item) => (
-        <li key={item.id}>
-          <Link href={`/items/${item.id}`} className="text-blue-500">
-            {item.title} ({item.created_at})
+        <li key={item.id} className="flex items-center">
+          <Link 
+            href={`/items/${item.id}`} 
+            className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+          >
+            {item.title}
           </Link>
+          <span className="text-gray-400 text-sm ml-3">
+            {new Date(item.created_at).toLocaleDateString()}
+          </span>
         </li>
       ))}
     </ul>

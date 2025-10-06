@@ -13,7 +13,11 @@ export default async function ItemPage({ params }: Params) {
   try {
     item = await getItem(id);
   } catch {
-    return <p>Item not found</p>;
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+        <p className="text-gray-600 text-lg">Item not found</p>
+      </div>
+    );
   }
 
   async function handleDelete() {
@@ -28,16 +32,22 @@ export default async function ItemPage({ params }: Params) {
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Item Details</h1>
-      <ItemForm item={item} onSuccess={handleSuccess} />
-      
-      {}
-      <form action={handleDelete}>
-        <button type="submit" className="bg-red-500 text-white p-2 mt-4">
-          Delete
-        </button>
-      </form>
+    <div className="max-w-2xl mx-auto">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h1 className="text-3xl font-bold mb-6 text-gray-900">Item Details</h1>
+        <ItemForm item={item} onSuccess={handleSuccess} />
+        
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <form action={handleDelete}>
+            <button 
+              type="submit" 
+              className="bg-red-500 hover:bg-red-600 text-white font-medium px-6 py-2.5 rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
+            >
+              Delete Item
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }
