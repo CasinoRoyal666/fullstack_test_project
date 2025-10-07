@@ -3,12 +3,12 @@ from .base import *
 
 DEBUG = True
 
-# SECRET_KEY = os.getenv(
-#     'SECRET_KEY',
-#     'django-insecure-dev-key-only-for-development-change-in-prod'
-# )
+SECRET_KEY = os.getenv(
+     'SECRET_KEY',
+     'django-insecure-dev-key-only-for-development-change-in-prod'
+)
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'backend', '0.0.0.0']
 
 # CORS settings
 CORS_ALLOWED_ORIGINS = [
@@ -17,6 +17,15 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
 
 #Django Debug Toolbar
 INTERNAL_IPS = [

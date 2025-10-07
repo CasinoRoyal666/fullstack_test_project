@@ -1,17 +1,23 @@
 import ItemForm from '@/components/ItemForm';
-import { getItem, deleteItem } from '@/app/lib/api';
+import { getItem, deleteItem } from '@/lib/api';
 import { Item } from '@/types';
 import { redirect } from 'next/navigation';
 
-interface Params {
-  params: { id: string };
-}
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
-export default async function ItemPage({ params }: Params) {
-  const id = parseInt(params.id);
+export default async function ItemDetailPage({ 
+  params 
+}: { 
+  params: Promise<{ id: string }> 
+}) {
+  const { id } = await params;
+  const itemId = parseInt(id);
+  
   let item: Item | null = null;
+  
   try {
-    item = await getItem(id);
+    item = await getItem(itemId);
   } catch {
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
@@ -22,22 +28,17 @@ export default async function ItemPage({ params }: Params) {
 
   async function handleDelete() {
     'use server';
-    await deleteItem(id);
-    redirect('/');
-  }
-
-  async function handleSuccess() {
-    'use server';
-    redirect('/');
+    await deleteItem(itemId);
+    redirect('/');  
   }
 
   return (
     <div className="max-w-2xl mx-auto">
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h1 className="text-3xl font-bold mb-6 text-gray-900">Item Details</h1>
-        <ItemForm item={item} onSuccess={handleSuccess} />
+        <h1 className="text-3xl font-bold mb-6 text-gray-900">Edit Item</h1>
+        <ItemForm item={item} />
         
-        <div className="mt-6 pt-6 border-t border-gray-200">
+        <div className="mt-6 pt-6 border-gray-200">
           <form action={handleDelete}>
             <button 
               type="submit" 

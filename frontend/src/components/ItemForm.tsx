@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { createItem, updateItem } from '@/app/lib/api';
+import { createItem, updateItem } from '@/lib/api';
 import { Item } from '@/types';
 import { useRouter } from 'next/navigation';
 

@@ -1,0 +1,40 @@
+services:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx-dev.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - backend
+      - frontend
+
+  backend:
+    build: ./backend
+    environment:
+      - DEBUG=${DEBUG:-True}
+      - DJANGO_ENVIRONMENT=${DJANGO_ENVIRONMENT:-development}
+      - DB_NAME=${DB_NAME:-fullstack_test_project}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-danikpranik2005}
+      - DB_HOST=${DB_HOST:-db}
+      - SECRET_KEY=${SECRET_KEY:-dev-key}
+    depends_on:
+      - db
+
+  frontend:
+    build: ./frontend
+    environment:
+      - API_URL=http://backend:8000/api
+      - NEXT_PUBLIC_API_URL=/api
+    depends_on:
+      - backend
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${DB_NAME:-fullstack_test_project}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-danikpranik2005}
+    ports:
+      - "5432:5432"
