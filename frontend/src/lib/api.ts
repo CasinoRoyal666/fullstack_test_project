@@ -1,13 +1,20 @@
 import axios from "axios";
 import { Item } from "@/types";
 
+const getBaseURL = () => {
+  if (typeof window !== 'undefined') {
+    return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+  }
+  return process.env.API_URL || 'http://localhost:8000/api';  // Для local - localhost
+};
+
 //BASIC SETTINGS
 const api = axios.create({
-    baseURL: 'http://localhost:8000/api',
-    headers: {
+  baseURL: getBaseURL(),
+  headers: {
     'Content-Type': 'application/json',
   },
-})
+});
 
 //GET LIST
 export const getItems = async (): Promise<Item[]> => {

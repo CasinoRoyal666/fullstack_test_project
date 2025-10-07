@@ -1,4 +1,4 @@
-import { getItems } from '@/app/lib/api';
+import { getItems } from '@/lib/api';
 import { Item } from '@/types';
 import Link from 'next/link';
 
