@@ -2,11 +2,11 @@
 
 dev:
 	@echo "Starting development environment..."
-	docker-compose --env-file .env.development up --build
+	docker-compose --env-file .env.dev up --build
 
 prod:
 	@echo "Starting production environment..."
-	docker-compose --env-file .env.production up --build
+	docker-compose --env-file .env.prod up --build
 
 down:
 	docker-compose down

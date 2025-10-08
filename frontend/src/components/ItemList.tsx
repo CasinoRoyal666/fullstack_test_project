@@ -22,8 +22,8 @@ export default async function ItemList() {
     <ul className="space-y-3">
       {items.map((item) => (
         <li key={item.id} className="flex items-center">
-          <Link 
-            href={`/items/${item.id}`} 
+          <Link
+            href={`/items/${item.id}`}
             className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
           >
             {item.title}
