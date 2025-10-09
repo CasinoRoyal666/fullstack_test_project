@@ -6,8 +6,8 @@ import { Item } from '@/types';
 import { useRouter } from 'next/navigation';
 
 interface ItemFormProps {
-    item?: Item;
-    onSuccess?: () => void;
+  item?: Item;
+  onSuccess?: () => void;
 }
 
 export default function ItemForm({ item, onSuccess }: ItemFormProps) {
@@ -27,14 +27,14 @@ export default function ItemForm({ item, onSuccess }: ItemFormProps) {
       } else {
         await createItem({ title, description });
       }
-      
+
       if (!item) {
         setTitle('');
         setDescription('');
       }
-      
+
       router.refresh();
-      
+
       if (onSuccess) onSuccess();
     } catch (err) {
       setError('Error saving item');
@@ -65,9 +65,9 @@ export default function ItemForm({ item, onSuccess }: ItemFormProps) {
           className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
         />
       </div>
-      <button 
-        type="submit" 
-        disabled={loading} 
+      <button
+        type="submit"
+        disabled={loading}
         className="bg-blue-500 hover:bg-blue-600 text-white font-medium px-6 py-2.5 rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading ? 'Saving...' : item ? 'Update Item' : 'Create Item'}

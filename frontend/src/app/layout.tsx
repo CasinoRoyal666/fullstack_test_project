@@ -13,9 +13,7 @@ export default function RootLayout({
             </h1>
           </div>
         </nav>
-        <main className="max-w-6xl mx-auto px-4 py-10">
-          {children}
-        </main>
+        <main className="max-w-6xl mx-auto px-4 py-10">{children}</main>
       </body>
     </html>
   );

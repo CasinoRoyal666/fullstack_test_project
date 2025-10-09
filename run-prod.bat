@@ -1,0 +1,3 @@
+@echo off
+echo Starting production environment...
+docker compose --env-file .env.prod --profile prod up --build

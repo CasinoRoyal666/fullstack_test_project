@@ -11,7 +11,7 @@ export default async function Home() {
         <h1 className="text-3xl font-bold mb-6 text-gray-900">Items List</h1>
         <ItemForm />
       </div>
-      
+
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <ItemList />
       </div>
