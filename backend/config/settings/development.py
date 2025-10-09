@@ -8,13 +8,17 @@ SECRET_KEY = os.getenv(
     "SECRET_KEY", "django-insecure-dev-key-only-for-development-change-in-prod"
 )
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "backend", "0.0.0.0"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "backend", "0.0.0.0", "*"]
 
-# CORS settings
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
+    "http://localhost",  
+    "http://localhost:80",
+    "http://localhost:3000",  
     "http://127.0.0.1:3000",
+    "http://frontend:3000", 
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True 
 
 CORS_ALLOW_CREDENTIALS = True
 

@@ -1,0 +1,3 @@
+@echo off
+echo Starting development environment...
+docker compose --env-file .env.dev --profile dev up --build
