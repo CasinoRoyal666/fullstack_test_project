@@ -1,6 +1,5 @@
 import os
 import time
-
 from django.core.management.base import BaseCommand
 from selenium import webdriver
 from selenium.common import TimeoutException, NoSuchElementException
@@ -34,7 +33,7 @@ class Command(BaseCommand):
             )
             self.stdout.write(self.style.SUCCESS('Successfully connected to Selenium.'))
             page_number = 1
-            MAX_PAGES_TO_PARSE = 4
+            MAX_PAGES_TO_PARSE = 100
             target_url = "https://www.triviawell.com/"
             self.stdout.write(f'Opening {target_url}...')
             driver.get(target_url)
@@ -46,9 +45,11 @@ class Command(BaseCommand):
                 time.sleep(2)
             except TimeoutException:
                 self.stdout.write("Cookie banner not found or already accepted.")
+
             while page_number <= MAX_PAGES_TO_PARSE:
                 try:
-                    question_cards = wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.card.mb-4.card-hover")))
+                    question_cards = wait.until(
+                        EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.card.mb-4.card-hover")))
                 except TimeoutException:
                     self.stdout.write(self.style.SUCCESS("No more questions found. Finishing parsing."))
                     break
@@ -58,91 +59,110 @@ class Command(BaseCommand):
                         question_text_element = card.find_element(By.CSS_SELECTOR, "a.text-inherit")
                         text = question_text_element.get_attribute('textContent').strip()
 
-                        if Question.objects.filter(text=text).exists():
-                            self.stdout.write(f'Question "{text[:50]}..." already exists. Skipping.')
+                        existing_question = Question.objects.filter(text=text).first()
+
+                        category = None
+                        try:
+                            category_element = card.find_element(By.CSS_SELECTOR, "li.list-inline-item a")
+                            category_name = category_element.get_attribute('textContent').strip()
+
+                            if category_name:
+                                category, _ = Category.objects.get_or_create(name=category_name)
+                                self.stdout.write(f'  📂 Category: "{category_name}"')
+                            else:
+                                self.stdout.write(self.style.WARNING(f'  ⚠️  Empty category name'))
+                        except NoSuchElementException:
+                            self.stdout.write(self.style.WARNING(f'  ⚠️  No category element found'))
+
+                        correct_answer = None
+                        try:
+                            answer_element = card.find_element(By.CSS_SELECTOR, "ul.d-none.answer li")
+                            correct_answer = answer_element.get_attribute('textContent').strip()
+
+                            if correct_answer:
+                                self.stdout.write(f'  ✓ Answer: "{correct_answer[:60]}..."')
+                            else:
+                                self.stdout.write(self.style.WARNING(f'  ⚠️  Empty answer text'))
+                        except NoSuchElementException:
+                            self.stdout.write(self.style.WARNING(f'  ⚠️  No answer element found'))
+
+                        # В блоке обновления существующего вопроса:
+                        if existing_question:
+                            needs_update = False
+
+                            # Проверяем что категория либо None, либо пустая
+                            current_cat_empty = not existing_question.category or not existing_question.category.name
+
+                            if current_cat_empty and category:
+                                existing_question.category = category
+                                needs_update = True
+                                self.stdout.write(f'  → Updated category to: "{category.name}"')
+
+                            if not existing_question.correct_answer and correct_answer:
+                                existing_question.correct_answer = correct_answer
+                                needs_update = True
+                                self.stdout.write(f'  → Updated answer')
+
+                            if needs_update:
+                                existing_question.save()
+                                self.stdout.write(self.style.SUCCESS(f'✓ Updated: "{text[:50]}..."'))
+                            else:
+                                self.stdout.write(f'⊘ Already complete: "{text[:50]}..."')
                             continue
 
-                        category_tags = card.find_elements(By.CSS_SELECTOR, "li a")
-                        if not category_tags:
-                            self.stdout.write(self.style.WARNING(f'No category found for question: "{text[:50]}..."'))
+                        if not category:
+                            self.stdout.write(self.style.WARNING(f'⊘ Skipping (no category): "{text[:50]}..."'))
                             continue
 
-                        main_category_name = category_tags[0].text
-                        category, _ = Category.objects.get_or_create(name=main_category_name)
-                        correct_answer = card.find_element(By.CSS_SELECTOR, "ul.d-none.answer li").text
+                        if not correct_answer:
+                            self.stdout.write(self.style.WARNING(f'⊘ Skipping (no answer): "{text[:50]}..."'))
+                            continue
 
                         Question.objects.create(
                             category=category,
                             text=text,
                             correct_answer=correct_answer
                         )
-                        self.stdout.write(self.style.SUCCESS(f'Saved question: "{text[:50]}..."'))
+                        self.stdout.write(self.style.SUCCESS(f'✓ Saved: "{text[:50]}..."'))
+
                     except NoSuchElementException as e:
-                        self.stdout.write(self.style.WARNING(f'Could not parse a card, missing element: {e}'))
+                        self.stdout.write(self.style.WARNING(f'⊘ Could not parse card: {e}'))
                     except Exception as e:
-                        self.stdout.write(self.style.WARNING(f'An unexpected error occurred for a card: {e}'))
+                        self.stdout.write(self.style.WARNING(f'⊘ Unexpected error: {e}'))
+
                 try:
                     next_page_link = driver.find_element(By.XPATH, '//a[text()="Next"]')
                     next_page_url = next_page_link.get_attribute('href')
 
                     if next_page_url:
-                        self.stdout.write(f"Navigating to next page: {next_page_url}")
+                        self.stdout.write(f"\n→ Page {page_number + 1}: {next_page_url}\n")
                         driver.get(next_page_url)
                         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.card.mb-4.card-hover")))
                         page_number += 1
                         time.sleep(1)
                     else:
-                        self.stdout.write(self.style.SUCCESS("No 'Next' button found. This is the last page."))
+                        self.stdout.write(self.style.SUCCESS("No next page URL."))
                         break
                 except NoSuchElementException:
-                    self.stdout.write(self.style.SUCCESS("No 'Next' button found. This is the last page."))
+                    self.stdout.write(self.style.SUCCESS("No 'Next' button found."))
                     break
+
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f'A critical error occurred: {e}'))
+            self.stdout.write(self.style.ERROR(f'Critical error: {e}'))
         finally:
             if driver:
                 driver.quit()
-                self.stdout.write(self.style.SUCCESS('Browser session closed.'))
-        self.stdout.write(self.style.SUCCESS('Parsing finished.'))
+                self.stdout.write(self.style.SUCCESS('Browser closed.'))
 
+        total = Question.objects.count()
+        with_categories = Question.objects.filter(category__isnull=False).count()
+        with_answers = Question.objects.exclude(correct_answer='').count()
 
-        #     category_urls = [elem.get_attribute('href') for elem in category_elements]
-        #     self.stdout.write(f'found {len(category_urls)} categories')
-        #
-        #     for url in category_urls:
-        #         driver.get(url)
-        #         category_name_element = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, )))
-        #         category_name = category_name_element.text
-        #         category, created =  Category.objects.get_or_create(name=category_name)
-        #         if created:
-        #             self.stdout.write(self.style.SUCCESS(f'Category "{category_name}" created.'))
-        #         else:
-        #             self.stdout.write(f'Category "{category_name}" already exists.')
-        #         question_cards = wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, )))
-        #         self.stdout.write(f'Found {len(question_cards)} questions on the page.')
-        #         for card in question_cards:
-        #             try:
-        #                 text = card.find_element(By.CSS_SELECTOR, ).text
-        #                 answer_options = [opt.text for opt in card.find_elements(By.CSS_SELECTOR, )]
-        #                 correct_answer = card.find_element(By.CSS_SELECTOR, ).text
-        #                 if text and correct_answer and len(answer_options) > 0:
-        #                     Question.object.create(
-        #                         category=category,
-        #                         text=text,
-        #                         answer_options={'options': answer_options},
-        #                         correct_answer=correct_answer,
-        #                     )
-        #                     self.stdout.write(f'  - Saved question: "{text[:50]}..."')
-        #             except Exception as e:
-        #                 self.stdout.write(self.style.WARNING(f'Could not parse a question card: {e}'))
-        #         time.sleep(1)
-        # except Exception as e:
-        #     self.stdout.write(self.style.ERROR(f'An error occurred: {e}'))
-        # finally:
-        #     if driver:
-        #         driver.quit()
-        #         self.stdout.write(self.style.SUCCESS('Browser session closed.'))
-        # self.stdout.write(self.style.SUCCESS('Parsing finished.'))
-
-
-
+        self.stdout.write(self.style.SUCCESS(
+            f'\n'
+            f'===== PARSING FINISHED =====\n'
+            f'Total questions: {total}\n'
+            f'With categories: {with_categories}\n'
+            f'With answers: {with_answers}\n'
+            f'============================'
+        ))
