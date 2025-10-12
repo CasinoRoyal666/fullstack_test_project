@@ -68,11 +68,11 @@ class Command(BaseCommand):
 
                             if category_name:
                                 category, _ = Category.objects.get_or_create(name=category_name)
-                                self.stdout.write(f'  📂 Category: "{category_name}"')
+                                self.stdout.write(f'Category: "{category_name}"')
                             else:
-                                self.stdout.write(self.style.WARNING(f'  ⚠️  Empty category name'))
+                                self.stdout.write(self.style.WARNING(f'Empty category name'))
                         except NoSuchElementException:
-                            self.stdout.write(self.style.WARNING(f'  ⚠️  No category element found'))
+                            self.stdout.write(self.style.WARNING(f'No category element found'))
 
                         correct_answer = None
                         try:
@@ -82,40 +82,38 @@ class Command(BaseCommand):
                             if correct_answer:
                                 self.stdout.write(f'  ✓ Answer: "{correct_answer[:60]}..."')
                             else:
-                                self.stdout.write(self.style.WARNING(f'  ⚠️  Empty answer text'))
+                                self.stdout.write(self.style.WARNING(f'Empty answer text'))
                         except NoSuchElementException:
-                            self.stdout.write(self.style.WARNING(f'  ⚠️  No answer element found'))
+                            self.stdout.write(self.style.WARNING(f'No answer element found'))
 
-                        # В блоке обновления существующего вопроса:
                         if existing_question:
                             needs_update = False
 
-                            # Проверяем что категория либо None, либо пустая
                             current_cat_empty = not existing_question.category or not existing_question.category.name
 
                             if current_cat_empty and category:
                                 existing_question.category = category
                                 needs_update = True
-                                self.stdout.write(f'  → Updated category to: "{category.name}"')
+                                self.stdout.write(f'Updated category to: "{category.name}"')
 
                             if not existing_question.correct_answer and correct_answer:
                                 existing_question.correct_answer = correct_answer
                                 needs_update = True
-                                self.stdout.write(f'  → Updated answer')
+                                self.stdout.write(f'Updated answer')
 
                             if needs_update:
                                 existing_question.save()
-                                self.stdout.write(self.style.SUCCESS(f'✓ Updated: "{text[:50]}..."'))
+                                self.stdout.write(self.style.SUCCESS(f'Updated: "{text[:50]}..."'))
                             else:
-                                self.stdout.write(f'⊘ Already complete: "{text[:50]}..."')
+                                self.stdout.write(f'Already complete: "{text[:50]}..."')
                             continue
 
                         if not category:
-                            self.stdout.write(self.style.WARNING(f'⊘ Skipping (no category): "{text[:50]}..."'))
+                            self.stdout.write(self.style.WARNING(f'Skipping (no category): "{text[:50]}..."'))
                             continue
 
                         if not correct_answer:
-                            self.stdout.write(self.style.WARNING(f'⊘ Skipping (no answer): "{text[:50]}..."'))
+                            self.stdout.write(self.style.WARNING(f'Skipping (no answer): "{text[:50]}..."'))
                             continue
 
                         Question.objects.create(
@@ -123,12 +121,12 @@ class Command(BaseCommand):
                             text=text,
                             correct_answer=correct_answer
                         )
-                        self.stdout.write(self.style.SUCCESS(f'✓ Saved: "{text[:50]}..."'))
+                        self.stdout.write(self.style.SUCCESS(f'Saved: "{text[:50]}..."'))
 
                     except NoSuchElementException as e:
-                        self.stdout.write(self.style.WARNING(f'⊘ Could not parse card: {e}'))
+                        self.stdout.write(self.style.WARNING(f'Could not parse card: {e}'))
                     except Exception as e:
-                        self.stdout.write(self.style.WARNING(f'⊘ Unexpected error: {e}'))
+                        self.stdout.write(self.style.WARNING(f'Unexpected error: {e}'))
 
                 try:
                     next_page_link = driver.find_element(By.XPATH, '//a[text()="Next"]')

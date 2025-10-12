@@ -23,6 +23,13 @@ services:
       - "7900:7900"
     shm_size: 2g
     profiles: [dev, prod]
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    profiles: ["dev", "prod"]
 
   backend:
     build: 
@@ -38,6 +45,7 @@ services:
       DB_HOST: ${DB_HOST}
       SECRET_KEY: ${SECRET_KEY}
       SELENIUM_URL: http://selenium:4444/wd/hub
+      OLLAMA_URL: http://ollama:11434
     ports:
       - "8000:8000"
     volumes:
@@ -46,6 +54,8 @@ services:
       db:
         condition: service_healthy
       selenium:
+        condition: service_started
+      ollama:
         condition: service_started
     profiles: ["dev", "prod"]
 
@@ -155,3 +165,4 @@ services:
 volumes:
   postgres_data:
   frontend_build:
+  ollama_data:
