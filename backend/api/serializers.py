@@ -1,5 +1,4 @@
 from rest_framework import serializers
-from rest_framework.templatetags.rest_framework import items
 
 from .models import Item
 

@@ -32,7 +32,7 @@ services:
     profiles: ["dev", "prod"]
 
   backend:
-    build: 
+    build:
       context: ./backend
       dockerfile: Dockerfile
     environment:
@@ -83,7 +83,7 @@ services:
       args:
         NEXT_PUBLIC_API_URL: /api/
     environment:
-      NEXT_PUBLIC_API_URL: /api/ 
+      NEXT_PUBLIC_API_URL: /api/
     depends_on:
       - backend
     profiles: ["prod"]
@@ -161,7 +161,6 @@ services:
     volumes:
       - ./frontend:/app
     profiles: ["test"]
-
 volumes:
   postgres_data:
   frontend_build:

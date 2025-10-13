@@ -1,8 +1,4 @@
-from http.client import responses
-
-from django.test import TestCase
 from rest_framework import status
-from rest_framework.status import HTTP_201_CREATED
 from rest_framework.test import APITestCase
 
 from .models import Item

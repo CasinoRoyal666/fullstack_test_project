@@ -6,7 +6,7 @@ const getBaseURL = () => {
     const url = process.env.NEXT_PUBLIC_API_URL || '/api';
     return url.endsWith('/') ? url : `${url}/`;
   }
-  
+
   const url = process.env.API_URL || 'http://backend:8000/api';
   return url.endsWith('/') ? url : `${url}/`;
 };
@@ -53,7 +53,7 @@ export const getItem = async (id: number): Promise<Item> => {
   return response.data;
 };
 
-// PUT 
+// PUT
 export const updateItem = async (
   id: number,
   data: Partial<Item>

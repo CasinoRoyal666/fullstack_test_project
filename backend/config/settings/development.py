@@ -1,7 +1,5 @@
 import os
 
-from .base import *
-
 DEBUG = True
 
 SECRET_KEY = os.getenv(
@@ -11,14 +9,14 @@ SECRET_KEY = os.getenv(
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "backend", "0.0.0.0", "*"]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost",  
+    "http://localhost",
     "http://localhost:80",
-    "http://localhost:3000",  
+    "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "http://frontend:3000", 
+    "http://frontend:3000",
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True 
+CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_CREDENTIALS = True
 
