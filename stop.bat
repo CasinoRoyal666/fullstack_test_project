@@ -1,3 +1,0 @@
-@echo off
-echo Stopping all services...
-docker compose --profile dev --profile prod --profile test --profile lint down
