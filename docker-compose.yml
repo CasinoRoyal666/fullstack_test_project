@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:17
@@ -17,7 +15,23 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
-    profiles: ["dev", "prod"]
+    profiles: ["dev", "prod", "test"]
+
+  selenium:
+    image: selenium/standalone-chrome:latest
+    ports:
+      - "4444:4444"
+      - "7900:7900"
+    shm_size: 2g
+    profiles: [dev, prod, test]
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    profiles: ["dev", "prod", "test"]
 
   backend:
     build:
@@ -32,6 +46,8 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       DB_HOST: ${DB_HOST}
       SECRET_KEY: ${SECRET_KEY}
+      SELENIUM_URL: http://selenium:4444/wd/hub
+      OLLAMA_URL: http://ollama:11434
     ports:
       - "8000:8000"
     volumes:
@@ -39,6 +55,10 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      selenium:
+        condition: service_started
+      ollama:
+        condition: service_started
     profiles: ["dev", "prod"]
 
   frontend:
@@ -92,53 +112,38 @@ services:
       - frontend-prod
     profiles: ["prod"]
 
-  backend-codecheck:
-    build: ./backend
-    command: sh -c "black --check . && isort --check-only . && flake8 ."
-    volumes:
-      - ./backend:/app
-    profiles: ["lint"]
-
-  backend-codefix:
-    build: ./backend
-    command: sh -c "black . && isort ."
-    volumes:
-      - ./backend:/app
-    profiles: ["fix"]
-
-  frontend-codecheck:
-    build: ./frontend
-    command: sh -c "npm run lint"
-    volumes:
-      - ./frontend:/app
-    profiles: ["lint"]
-
-  frontend-codefix:
-    build: ./frontend
-    command: sh -c "npm run lint:fix && npm run format"
-    volumes:
-      - ./frontend:/app
-    profiles: ["fix"]
-
   backend-test:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file: .env.dev
     environment:
       MODE: test
       DJANGO_ENVIRONMENT: test
-      DEBUG: False
-      DB_NAME: test_db
+      DEBUG: "False"
+      SECRET_KEY: test-secret-key
+      DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_HOST: db
-      SECRET_KEY: test-secret-key
+      SELENIUM_URL: http://selenium:4444/wd/hub
+      OLLAMA_URL: http://ollama:11434
     command: python manage.py test --parallel
+    volumes:
+      - ./backend:/app
     depends_on:
       db:
         condition: service_healthy
+      selenium:
+        condition: service_started
+      ollama:
+        condition: service_started
     profiles: ["test"]
 
   frontend-test:
-    build: ./frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
     command: npm test
     volumes:
       - ./frontend:/app
@@ -147,3 +152,4 @@ services:
 volumes:
   postgres_data:
   frontend_build:
+  ollama_data:
