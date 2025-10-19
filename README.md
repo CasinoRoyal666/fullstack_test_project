@@ -6,6 +6,8 @@
 - DJANGO
 - DOCKER
 
+## To install all dependencies, run from the root directory
+    pip-compile --output-file=backend/dependencies.txt backend/dependencies.in
 ## Docker container startup commands:
 ### To run application in development mode:
     docker compose --env-file .env.dev --profile dev up --build
