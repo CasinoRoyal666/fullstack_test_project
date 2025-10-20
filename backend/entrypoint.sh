@@ -1,16 +1,21 @@
-#!/bin/sh
+#!/bin/bash
 set -e
+
+if [ -n "$1" ]; then
+    echo "Executing command: $*"
+    exec "$@"
+fi
+
+if [ "$MODE" = "test" ]; then
+    echo "Test mode - skipping migrations and collectstatic"
+    exit 0
+fi
 
 echo "Running Django migrations..."
 python manage.py migrate --noinput
 
 echo "Collecting static files..."
 python manage.py collectstatic --noinput --clear
-
-if [ -n "$1" ]; then
-    echo "Executing command: $@"
-    exec "$@"
-fi
 
 if [ "$MODE" = "dev" ]; then
     echo "Starting development server..."
