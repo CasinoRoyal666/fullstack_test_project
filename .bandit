@@ -1,0 +1,6 @@
+exclude_dirs:
+  - tests
+  - test
+skips:
+  - B105:
+    - backend/config/settings/test.py
