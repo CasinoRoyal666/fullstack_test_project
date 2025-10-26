@@ -7,4 +7,5 @@ urlpatterns = [
     path("items/", views.items_list, name="items-list"),
     path("items/create/", views.post_item, name="post-item"),
     path("items/<int:pk>/", views.item_details, name="item_details"),
+    path("game/random-questions/", views.random_question, name="random-questions"),
 ]

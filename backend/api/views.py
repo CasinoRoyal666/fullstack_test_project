@@ -1,9 +1,11 @@
+import secrets
+
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from .models import Item
-from .serializers import ItemSerializer
+from .models import Item, Question
+from .serializers import GameQuestionSerializer, ItemSerializer
 
 """
 This is a test endpoint, nothing useful
@@ -66,3 +68,26 @@ def item_details(request, pk):
     elif request.method == "DELETE":
         item.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+"""
+Get a pack of random questions for a game
+"""
+
+
+@api_view(["GET"])
+def random_question(request):
+    try:
+        count = int(request.query_params.get("count", 10))
+    except (ValueError, TypeError):
+        count = 10
+
+    question_ids = list(Question.objects.values_list("id", flat=True))
+
+    if len(question_ids) < count:
+        count = len(question_ids)
+
+    random_ids = secrets.SystemRandom().sample(question_ids, count)
+    questions = Question.objects.filter(id__in=random_ids)
+    serializer = GameQuestionSerializer(questions, many=True)
+    return Response(serializer.data)
