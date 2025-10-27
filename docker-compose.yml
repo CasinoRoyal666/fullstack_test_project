@@ -16,6 +16,7 @@ services:
       retries: 5
       start_period: 10s
     profiles: ["dev", "prod"]
+
   selenium:
     image: selenium/standalone-chrome:latest
     ports:
@@ -110,33 +111,19 @@ services:
       - frontend-prod
     profiles: ["prod"]
 
-  backend-codecheck:
-    build: ./backend
-    command: sh -c "black --check . && isort --check-only . && flake8 ."
+  game_service:
+    build:
+      context: ./game_service
+      dockerfile: Dockerfile
+    env_file:
+      - ./.env.dev
+    ports:
+      - "8001:8001"
     volumes:
-      - ./backend:/app
-    profiles: ["lint"]
-
-  backend-codefix:
-    build: ./backend
-    command: sh -c "black . && isort ."
-    volumes:
-      - ./backend:/app
-    profiles: ["fix"]
-
-  frontend-codecheck:
-    build: ./frontend
-    command: sh -c "npm run lint"
-    volumes:
-      - ./frontend:/app
-    profiles: ["lint"]
-
-  frontend-codefix:
-    build: ./frontend
-    command: sh -c "npm run lint:fix && npm run format"
-    volumes:
-      - ./frontend:/app
-    profiles: ["fix"]
+      - ./game_service:/app
+    depends_on:
+      - backend
+    profiles: ["dev", "prod"]
 
   backend-test:
     build: ./backend
